@@ -10,7 +10,7 @@ st.set_page_config(page_title="Recommendation Tool", layout="centered")
 st.markdown("## 🔄 Select Targeting Recommendation Type to Begin")
 selected = st.selectbox(
     "Choose a Mode",
-    options=["", "Audience", "Keyword"],
+    options=["", "Audience", "Keyword", "Placement"],
     format_func=lambda x: "👉 Select a Mode" if x == "" else f"🔘 {x.upper()} Recommendation"
 )
 
@@ -20,7 +20,7 @@ if selected == "":
 
 # Continue only if a valid selection is made
 mode = selected
-text_col = 'display_name' if mode == "Audience" else 'ad_group_criterion_keyword_text'
+text_col = 'ad_group_criterion_keyword_text' if mode == "Keyword" else 'display_name'
 
 # Load Model
 @st.cache_resource
@@ -38,7 +38,11 @@ def load_audience_data():
 def load_keyword_data():
     return pd.read_csv("your_keyword_data.csv")
 
-df = load_audience_data() if mode == "Audience" else load_keyword_data()
+@st.cache_data
+def load_placement_data():
+    return pd.read_csv("your_placement_data.csv")
+
+df = load_audience_data() if mode == "Audience" else load_keyword_data() if mode == "Keyword" else load_placement_data()
 df = df.dropna(subset=[text_col, 'country'])
 
 # Show UI now
