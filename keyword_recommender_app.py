@@ -59,6 +59,11 @@ top_n = st.slider("🔝 Number of Recommendations", 1, 20, 5)
 if st.button("Generate Recommendations"):
 
     def recommend_items(user_keyword, performance_metric, country_filter_list, top_n=5, weight_performance=0.6, weight_similarity=0.4):
+        
+        if not country_filter_list:
+            st.error("❌ Please select at least one country.")
+            return pd.DataFrame()
+        
         if not country_filter_list or 'ALL' in country_filter_list or 'MULTIPLE' in country_filter_list:
             df_filtered = df.copy()
         else:
@@ -75,7 +80,10 @@ if st.button("Generate Recommendations"):
             'cost_per_conversion': 'mean',
             'conversions_from_interactions_rate': 'mean'
         })
-
+        if not user_keyword.strip():  # If user_keyword is empty or just spaces
+            df_grouped = df_grouped.sort_values(by=performance_metric, ascending=False)
+            return df_grouped[[text_col, performance_metric]].head(top_n)
+        
         user_embedding = model.encode(user_keyword, convert_to_tensor=True)
         text_list = df_grouped[text_col].tolist()
         text_embeddings = model.encode(text_list, convert_to_tensor=True)
@@ -94,13 +102,13 @@ if st.button("Generate Recommendations"):
                                         weight_similarity * df_grouped['similarity_norm'])
 
         df_grouped = df_grouped.sort_values(by='combined_score', ascending=False)
-
+        df_grouped['similarity'] = df_grouped['similarity'].round(4)
+        df_grouped[performance_metric] = df_grouped[performance_metric].astype("float64")
         display_cols = [text_col, performance_metric, 'similarity', 'combined_score']
         return df_grouped[display_cols].head(top_n)
 
     results = recommend_items(user_keyword, performance_metric, country_filter_list, top_n)
-    results['similarity'] = results['similarity'].round(4)
-    results[performance_metric] = results[performance_metric].astype("float64")
+    
 
     st.subheader(f"✅ Top {mode} Suggestions")
     st.dataframe(results)
