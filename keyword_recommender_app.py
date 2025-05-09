@@ -80,7 +80,7 @@ if st.button("Generate Recommendations"):
             'cost_per_conversion': 'mean',
             'conversions_from_interactions_rate': 'mean'
         })
-        if not user_keyword.strip():  # If user_keyword is empty or just spaces
+        if user_keyword.strip() == "":  # If user_keyword is empty or just spaces
             df_grouped = df_grouped.sort_values(by=performance_metric, ascending=False)
             return df_grouped[[text_col, performance_metric]].head(top_n)
         
